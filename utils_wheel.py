@@ -35,7 +35,10 @@ def wheel_maker(labels,
                 path_to_wheel='images\koleso_1.png',
                 path_to_font='arial.ttf',
                 font_scale=11,
-                wheel_name='lokeso_test.png'):
+                wheel_name='images\lokeso_test.png'):
+    path_to_font = os.path.normpath(path_to_font)
+    path_to_wheel = os.path.normpath(path_to_wheel)
+    wheel_name = os.path.normpath(wheel_name)
     angle_step = 360 // len(labels)
     angle = 90
     orig = Image.open(path_to_wheel)
@@ -90,4 +93,3 @@ def form_results(path, extension='png'):
         start_angle += angle_step
         end_angle += angle_step
     return results, angle_step
-

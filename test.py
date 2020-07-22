@@ -2,6 +2,7 @@ import pygame
 from sprite import Wheel, Pointer, Button
 from settings import *
 from utils_wheel import wheel_maker, make_a_result, form_results
+import os
 
 
 class Kolizei:
@@ -13,6 +14,12 @@ class Kolizei:
                  music_wheel='music\WheelSoundEffect.ogg',
                  music_win='music\DropSoundEffect.ogg', ):
         pygame.init()
+        img_wheel_path_null = os.path.normpath(img_wheel_path_null)
+        img_arrow_path = os.path.normpath(img_arrow_path)
+        img_background_path = os.path.normpath(img_background_path)
+        music_wheel = os.path.normpath(music_wheel)
+        music_win = os.path.normpath(music_win)
+        cards_directory = os.path.normpath(cards_directory)
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.background = pygame.image.load(img_background_path).convert()
         self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
