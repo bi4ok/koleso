@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 from sprite import Wheel, Pointer, Button
 from settings import *
@@ -6,13 +8,13 @@ import os
 
 
 class Kolizei:
-    def __init__(self, img_arrow_path='images\lumi.png',
-                 img_wheel_path_null='images\circle.png',
-                 img_background_path='images\koleso.png',
+    def __init__(self, img_arrow_path='images\\lumi.png',
+                 img_wheel_path_null='images\\circle.png',
+                 img_background_path='images\\koleso.png',
                  cards_directory='cards',
                  card_extension='txt',
-                 music_wheel='music\WheelSoundEffect.ogg',
-                 music_win='music\DropSoundEffect.ogg', ):
+                 music_wheel='music\\WheelSoundEffect.ogg',
+                 music_win='music\\DropSoundEffect.ogg', ):
         pygame.init()
         img_wheel_path_null = os.path.normpath(img_wheel_path_null)
         img_arrow_path = os.path.normpath(img_arrow_path)
@@ -24,6 +26,7 @@ class Kolizei:
         self.background = pygame.image.load(img_background_path).convert()
         self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
         self.background_rect = self.background.get_rect()
+        pygame.mixer.init()
         self.music = {'wheel': pygame.mixer.Sound(music_wheel),
                       'win': pygame.mixer.Sound(music_win)}
         self.cards, self.step = form_results(cards_directory, extension=card_extension)
@@ -38,7 +41,6 @@ class Kolizei:
         self.mouse_handlers = [button.handle_mouse_event]
         self.running = True
         self.context = {}
-        pygame.mixer.init()
         pygame.display.set_caption("Kolizei")
         self.clock = pygame.time.Clock()
         self.mouse_block = False
@@ -89,5 +91,8 @@ class Kolizei:
         surf.blit(text_surface, text_rect)
 
 
+if getattr(sys, 'frozen', False):
+    os.chdir(os.path.dirname(sys.executable))
+    print(os.path.dirname(sys.executable), '---')
 s = Kolizei()
 s.run()
