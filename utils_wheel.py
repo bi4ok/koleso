@@ -1,4 +1,5 @@
 import os
+import random
 
 from PIL import ImageFont, Image, ImageDraw
 import math
@@ -44,7 +45,8 @@ def wheel_maker(labels,
     orig = Image.open(path_to_wheel)
     width, heigth = orig.size
     middle_x, middle_y = width // 2, heigth // 2
-    for label, _ in labels.items():
+    for _, label_dict in labels.items():
+        label = label_dict['name']
         font = ImageFont.truetype(path_to_font, font_scale)
         line_height = sum(font.getmetrics())
         # print(label, font.getsize(label))
@@ -75,9 +77,32 @@ def make_a_result(current_angle, step, cards):
     for chose, card in cards.items():
         minus_angle, plus_angle = card['angles']
         if minus_angle < current_angle <= plus_angle:
-            return chose
+            return chose, card['name']
     else:
-        return None
+        return None, None
+
+
+# def form_results(path, extension='png', exceptions=None):
+#     if exceptions is None:
+#         exceptions = []
+#     results = {}
+#     for card in os.listdir(path):
+#         if card[-3:] == extension:
+#             if card[:-4] not in exceptions:
+#                 results[card[:-4]] = {'angles': [0, 0], 'path': os.path.join(path, card)}
+#     number_of_cards = len(list(results.keys()))
+#     if number_of_cards == 0:
+#         return None, None
+#     angle_step = 360 // number_of_cards
+#     start_angle = -angle_step // 2
+#     end_angle = start_angle + angle_step
+#     card_range = []
+#     for card_name, angles in results.items():
+#         card_range.append(start_angle + angle_step // 2 + 1)
+#         results[card_name]['angles'] = [start_angle, end_angle]
+#         start_angle += angle_step
+#         end_angle += angle_step
+#     return results, angle_step, card_range
 
 
 def form_results(path, extension='png', exceptions=None):
@@ -86,20 +111,63 @@ def form_results(path, extension='png', exceptions=None):
     results = {}
     for card in os.listdir(path):
         if card[-3:] == extension:
-            if card[:-4] not in exceptions:
-                results[card[:-4]] = {'angles': [0, 0], 'path': os.path.join(path, card)}
+            duplet = card[-6:-4]
+            if duplet[0] == '-':
+                duplicate_number = int(duplet[1])
+                card_name = card[:-6]
+            else:
+                duplicate_number = 1
+                card_name = card[:-4]
+            for number_of_duplicate in range(duplicate_number):
+                card_id = card_name + str(number_of_duplicate)
+                if card_id not in exceptions:
+                    results[card_name + str(number_of_duplicate)] = {'name': card_name, 'angles': [0, 0],
+                                                                     'path': os.path.join(path, card)}
+    shuffle_dict = list(results.items())
+    random.shuffle(shuffle_dict)
+    results = dict(shuffle_dict)
     number_of_cards = len(list(results.keys()))
     if number_of_cards == 0:
         return None, None
     angle_step = 360 // number_of_cards
     start_angle = -angle_step // 2
     end_angle = start_angle + angle_step
-    card_range = []
+    card_range = {}
     for card_name, angles in results.items():
-        card_range.append(start_angle + angle_step // 2 + 1)
+        card_range[card_name] = (start_angle + angle_step // 2 + 1)
         results[card_name]['angles'] = [start_angle, end_angle]
         start_angle += angle_step
         end_angle += angle_step
     return results, angle_step, card_range
 
-print(list(form_results('cards')[0].items())[0][1])
+
+# print(form_results('cards')[2])
+# card_range = form_results('cards')[2]
+#
+# counter = 0
+# def cheating(card_name_to_delete):
+#     global counter
+#     number_of_cards = len(list(card_range))
+#     fake_card_range = card_range.copy()
+#     if number_of_cards == 1:
+#         print('1')
+#         return fake_card_range
+#     elif number_of_cards in [2, 3, 4]:
+#         chance = random.randint(1, 10)
+#         print('2')
+#         if chance not in range(number_of_cards):
+#             print('+' * 100)
+#             del fake_card_range[card_name_to_delete]
+#     else:
+#         print('3')
+#         chance = random.randint(1, 100)
+#         if chance not in range(number_of_cards):
+#             print('+' * 100)
+#             counter += 1
+#             del fake_card_range[card_name_to_delete]
+#     print(counter)
+#     return fake_card_range
+#
+#
+# for i in range(1000):
+#     print(len(list(cheating('бунт на корабле0').values())),list(cheating('бунт на корабле0').values()))

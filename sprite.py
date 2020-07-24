@@ -95,7 +95,8 @@ class Lumi(pygame.sprite.Sprite):
         for frame in os.listdir(path_to_frames):
             path_to_frame = os.path.join(path_to_frames, frame)
             image = pygame.image.load(path_to_frame).convert_alpha()
-            image = pygame.transform.scale(image, (int(HEIGHT / 1.36), int(HEIGHT / 1.36)))
+            scale_rate = 1.3
+            image = pygame.transform.scale(image, (int(HEIGHT / scale_rate), int(HEIGHT / scale_rate)))
             self.frames.append(image)
         self.image = self.frames[0]
         self.rect = self.image.get_rect()

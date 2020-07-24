@@ -1,6 +1,6 @@
 import sys
 import random
-
+import math
 import pygame
 from sprite import Wheel, Pointer, Button, Lumi, Cards
 from settings import *
@@ -9,7 +9,7 @@ import os
 
 
 class Kolizei:
-    def __init__(self, img_arrow_path='images\\lumi_clear.png',
+    def __init__(self, img_arrow_path='images\\lumi_clear_2.png',
                  img_wheel_path_null='images\\koleso_hi_res.png',
                  img_background_path='images\\koleso.png',
                  cards_directory='cards',
@@ -60,6 +60,8 @@ class Kolizei:
         self.next_img_wheel_path = None
 
     def make_new_wheel(self):
+        if len(self.cards) == 1:
+            self.exeptions = []
         self.cards, self.step, self.card_range = form_results(self.cards_directory,
                                                               extension=self.card_extension,
                                                               exceptions=self.exeptions)
@@ -141,29 +143,68 @@ class Kolizei:
             pygame.display.flip()
         pygame.quit()
 
+    def cheating(self, card_name_to_delete):
+        number_of_cards = len(list(self.card_range))
+        fake_card_range = self.card_range.copy()
+        if number_of_cards == 1:
+            return fake_card_range
+        elif number_of_cards in [2, 3, 4]:
+            chance = random.randint(1, 10)
+            if chance not in range(number_of_cards):
+                del fake_card_range[card_name_to_delete]
+        else:
+            chance = random.randint(1, 100)
+            if chance not in range(number_of_cards):
+                del fake_card_range[card_name_to_delete]
+        return fake_card_range
+
+    def make_speed_card_range(self, cur_card_range):
+        speed_card_range_dict = {}
+        for angle in cur_card_range:
+            start_angle = angle - (self.step // 4)
+            speed_card_range_dict[angle] = []
+            for i in range(self.step // 2):
+                speed_card_range_dict[angle].append(start_angle)
+                start_angle += 1
+        return speed_card_range_dict
+
     def run_wheel_global(self):
         self.lumi_close()
-        wheel_speed = random.uniform(7, 12)
+        wheel_speed = random.uniform(15, 25)
+        min_wheel_speed = wheel_speed / 3
         self.music['wheel'].set_volume(0.1)
         self.music['wheel'].play()
         self.mouse_block = True
-
+        current_card_range = list(self.cheating('второе дыхание0').values())
+        slow_down = False
+        speed_range = self.make_speed_card_range(current_card_range)
+        next_cur_pos = 0
         while self.running:
             self.clock.tick(FPS)
             self.all_sprites.draw(self.screen)
             angle_res = self.wheel.update(wheel_speed)
-            wheel_speed = wheel_speed - 0.1 if wheel_speed > 1 else 1
-            print(wheel_speed, angle_res)
             pygame.display.flip()
-            if wheel_speed == 1 and (int(angle_res) in self.card_range):
+            if slow_down is False and wheel_speed <= min_wheel_speed:
+                for position, angles in speed_range.items():
+                    if int(angle_res) in angles:
+                        cur_pos = current_card_range.index(position)
+                        next_cur_index = cur_pos + 1 if cur_pos < (len(current_card_range) - 1) else 0
+                        next_cur_pos = current_card_range[next_cur_index]
+                        slow_down = True
+            elif slow_down is True:
+                wheel_speed = min_wheel_speed * (abs(next_cur_pos - angle_res) / self.step)
+                wheel_speed = wheel_speed if wheel_speed > 1 else 1
+            else:
+                wheel_speed = wheel_speed - 0.1 if wheel_speed > 1 else 1
+            if wheel_speed == 1 and (int(angle_res) in current_card_range):
                 self.music['wheel'].stop()
-                result = make_a_result(angle_res, self.step, self.cards)
+                result, card_name = make_a_result(angle_res, self.step, self.cards)
                 self.exeptions.append(result)
                 pygame.display.flip()
                 self.mouse_block = False
                 self.current_card.change_card(result)
                 self.lumi_open()
-                return result
+                return card_name
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
