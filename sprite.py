@@ -1,16 +1,15 @@
 from settings import *
 import pygame
 import settings as c
+import os
 
 
 class Pointer(pygame.sprite.Sprite):
     def __init__(self, img_arrow_path):
         pygame.sprite.Sprite.__init__(self)
-        player_img = pygame.image.load(img_arrow_path).convert()
-        self.image = pygame.transform.scale(player_img, (562, 562))
-        self.image.set_colorkey(BLACK)
+        player_img = pygame.image.load(img_arrow_path).convert_alpha()
+        self.image = pygame.transform.scale(player_img, (HEIGHT, HEIGHT))
         self.orig_image = self.image
-        # self.orig_image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH / 3.55, HEIGHT // 2)
 
@@ -18,19 +17,18 @@ class Pointer(pygame.sprite.Sprite):
 class Wheel(pygame.sprite.Sprite):
     def __init__(self, img_wheel_path):
         pygame.sprite.Sprite.__init__(self)
-        player_img = pygame.image.load(img_wheel_path).convert()
-        self.image = pygame.transform.scale(player_img, (1300, 1300))
-        self.image.set_colorkey(BLACK)
+        player_img = pygame.image.load(img_wheel_path).convert_alpha()
+        self.image = pygame.transform.scale(player_img, (int(HEIGHT * 2.32), int(HEIGHT * 2.32)))
         self.orig_image = self.image
-        # self.orig_image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.rect.center = (WIDTH // 20, HEIGHT // 2)
         self.angle = 0
 
     def update(self, angle_change):
         self.angle -= angle_change
+        if self.angle < 0:
+            self.angle += 360
         self.image = pygame.transform.rotozoom(self.orig_image, self.angle, 1)
-        self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect(center=self.rect.center)
         if self.rect.left > WIDTH:
             self.rect.right = 0
@@ -57,7 +55,7 @@ class Button(pygame.sprite.Sprite):
 
     def draw(self, surface):
         pygame.draw.rect(surface, self.back_color, self.rect)
-        #self.text.draw(surface)
+        # self.text.draw(surface)
 
     def handle_mouse_event(self, type, pos, context):
         if type == pygame.MOUSEMOTION:
@@ -84,5 +82,59 @@ class Button(pygame.sprite.Sprite):
     def handle_mouse_up(self, pos, context):
         if self.state == 'pressed':
             context['text'] = self.on_click()
+            context['flag'] = True
             self.image.fill((30, 140, 0))
             self.state = 'hover'
+            return True
+
+
+class Lumi(pygame.sprite.Sprite):
+    def __init__(self, path_to_frames):
+        pygame.sprite.Sprite.__init__(self)
+        self.frames = []
+        for frame in os.listdir(path_to_frames):
+            path_to_frame = os.path.join(path_to_frames, frame)
+            image = pygame.image.load(path_to_frame).convert_alpha()
+            image = pygame.transform.scale(image, (int(HEIGHT / 1.36), int(HEIGHT / 1.36)))
+            self.frames.append(image)
+        self.image = self.frames[0]
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH / 3.75, HEIGHT // 2.1)
+        self.current_frame = 0
+
+    def open_lumi(self):
+        for frame in self.frames:
+            self.image = frame
+            self.image.set_colorkey(BLACK)
+            self.rect = self.image.get_rect(center=self.rect.center)
+            yield self.current_frame
+            self.current_frame += 1
+
+    def close_lumi(self):
+        for frame in self.frames[::-1]:
+            self.image = frame
+            self.image.set_colorkey(BLACK)
+            self.rect = self.image.get_rect(center=self.rect.center)
+            yield self.current_frame
+            self.current_frame -= 1
+
+
+class Cards(pygame.sprite.Sprite):
+    def __init__(self, cards):
+        pygame.sprite.Sprite.__init__(self)
+        self.cards = {}
+        for card_name, angle_and_path in cards.items():
+            image = pygame.image.load(angle_and_path['path']).convert_alpha()
+            image = pygame.transform.scale(image, (int(HEIGHT / 2.5), int((HEIGHT / 2.5) * 1.518)))
+            self.cards[card_name] = image
+        self.image = list(self.cards.items())[0][1]
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH / 3.75, HEIGHT // 2.1)
+        self.current_card_name = list(self.cards.items())[0][0]
+
+    def change_card(self, change_to):
+        if self.cards.get(change_to):
+            self.image = self.cards[change_to]
+            self.current_card_name = change_to
+        else:
+            print('НЕТ КАРТЫ')

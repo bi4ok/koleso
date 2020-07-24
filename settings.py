@@ -5,10 +5,10 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
-FPS = 60
+FPS = 200
 color_list = [BLUE, BLACK, RED, WHITE]
-WIDTH = 1000
-HEIGHT = 562
+WIDTH = int(1000 * 1.5)
+HEIGHT = int(562 * 1.5)
 
 screen_width = 800
 screen_height = 600

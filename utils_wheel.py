@@ -34,9 +34,9 @@ def wheel_maker(labels,
                 radius_max=650,
                 path_to_wheel='images\koleso_1.png',
                 path_to_font='arial.ttf',
-                font_scale=11,
+                font_scale=13,
                 wheel_name='images\lokeso_test.png'):
-    path_to_font = os.path.normpath(path_to_font)
+    path_to_font = os.path.join("fonts", path_to_font)
     path_to_wheel = os.path.normpath(path_to_wheel)
     wheel_name = os.path.normpath(wheel_name)
     angle_step = 360 // len(labels)
@@ -60,8 +60,8 @@ def wheel_maker(labels,
             x = radius * math.sin(rads)
             y = radius * math.cos(rads)
             box = (middle_x + int(x) - font_image_x // 2, middle_y + int(y) - font_image_y // 2)
-            orig.paste((0, 0, 0), box=box, mask=font_image)
-            angle_cor += 1
+            orig.paste((5, 5, 5), box=box, mask=font_image)
+            angle_cor += 1.1
         # print(middle_x + int(x), middle_y + int(y), '=' * 10, label)
         angle -= angle_step
 
@@ -72,24 +72,34 @@ def wheel_maker(labels,
 def make_a_result(current_angle, step, cards):
     while current_angle < -step // 2:
         current_angle += 360
-    for chose, (minus_angle, plus_angle) in cards.items():
+    for chose, card in cards.items():
+        minus_angle, plus_angle = card['angles']
         if minus_angle < current_angle <= plus_angle:
             return chose
     else:
         return None
 
 
-def form_results(path, extension='png'):
+def form_results(path, extension='png', exceptions=None):
+    if exceptions is None:
+        exceptions = []
     results = {}
     for card in os.listdir(path):
         if card[-3:] == extension:
-            results[card[:-4]] = [0, 0]
+            if card[:-4] not in exceptions:
+                results[card[:-4]] = {'angles': [0, 0], 'path': os.path.join(path, card)}
     number_of_cards = len(list(results.keys()))
+    if number_of_cards == 0:
+        return None, None
     angle_step = 360 // number_of_cards
     start_angle = -angle_step // 2
     end_angle = start_angle + angle_step
+    card_range = []
     for card_name, angles in results.items():
-        results[card_name] = [start_angle, end_angle]
+        card_range.append(start_angle + angle_step // 2 + 1)
+        results[card_name]['angles'] = [start_angle, end_angle]
         start_angle += angle_step
         end_angle += angle_step
-    return results, angle_step
+    return results, angle_step, card_range
+
+print(list(form_results('cards')[0].items())[0][1])
